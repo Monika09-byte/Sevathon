@@ -1,0 +1,1963 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NGO Beneficiary Progress Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --dark-bg: #0a0e1a;
+            --card-bg: #1a1f2e;
+            --card-hover: #252b3d;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a9c0;
+            --accent-blue: #4f9cf9;
+            --accent-purple: #8b5cf6;
+            --accent-cyan: #06b6d4;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --border: #2d3748;
+            --shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+            --shadow-hover: 0 20px 40px rgba(0, 0, 0, 0.6);
+            --glow: 0 0 20px rgba(79, 156, 249, 0.3);
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--dark-bg);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Enhanced Animated Background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 60% 70%, rgba(139, 92, 246, 0.1) 0%, transparent 50%);
+            z-index: -1;
+            animation: backgroundShift 25s ease-in-out infinite;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                linear-gradient(45deg, transparent 30%, rgba(79, 156, 249, 0.03) 50%, transparent 70%),
+                linear-gradient(-45deg, transparent 30%, rgba(139, 92, 246, 0.03) 50%, transparent 70%);
+            z-index: -1;
+            animation: backgroundShift 30s ease-in-out infinite reverse;
+        }
+
+        @keyframes backgroundShift {
+            0%, 100% { transform: translateX(0) translateY(0) rotate(0deg); }
+            25% { transform: translateX(-30px) translateY(-15px) rotate(1deg); }
+            50% { transform: translateX(30px) translateY(15px) rotate(-1deg); }
+            75% { transform: translateX(-15px) translateY(30px) rotate(0.5deg); }
+        }
+
+        /* Enhanced Header */
+        .header {
+            background: var(--primary-gradient);
+            padding: 4rem 2rem;
+            text-align: center;
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.15), transparent);
+            animation: headerShine 4s ease-in-out infinite;
+        }
+
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent-cyan), transparent);
+            animation: headerGlow 3s ease-in-out infinite alternate;
+        }
+
+        @keyframes headerShine {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            50% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+            100% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+        }
+
+        @keyframes headerGlow {
+            0% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .header h1 {
+            font-size: clamp(2.2rem, 5vw, 3.5rem);
+            margin-bottom: 0.5rem;
+            font-weight: 800;
+            text-shadow: 0 4px 20px rgba(0,0,0,0.4);
+            animation: fadeInUp 1s ease-out;
+            letter-spacing: -0.02em;
+        }
+
+        .header p {
+            font-size: clamp(1.1rem, 2.5vw, 1.3rem);
+            opacity: 0.95;
+            animation: fadeInUp 1s ease-out 0.2s both;
+            font-weight: 400;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Enhanced Upload Section */
+        .upload-section {
+            background: var(--card-bg);
+            padding: 2.5rem;
+            border-radius: 24px;
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+            border: 1px solid var(--border);
+            transition: all 0.4s ease;
+            animation: slideInLeft 0.8s ease-out;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upload-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(79, 156, 249, 0.05) 0%, rgba(139, 92, 246, 0.05) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .upload-section:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--shadow-hover), var(--glow);
+            border-color: var(--accent-blue);
+        }
+
+        .upload-section:hover::before {
+            opacity: 1;
+        }
+
+        .upload-section h2 {
+            color: var(--text-primary);
+            margin-bottom: 1.5rem;
+            font-size: 1.6rem;
+            font-weight: 700;
+        }
+
+        .upload-area {
+            border: 2px dashed var(--accent-blue);
+            border-radius: 20px;
+            padding: 2.5rem;
+            text-align: center;
+            transition: all 0.4s ease;
+            background: rgba(79, 156, 249, 0.05);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upload-area::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: radial-gradient(circle, rgba(139, 92, 246, 0.1) 0%, transparent 70%);
+            transition: all 0.4s ease;
+            transform: translate(-50%, -50%);
+        }
+
+        .upload-area:hover {
+            border-color: var(--accent-purple);
+            background: rgba(139, 92, 246, 0.1);
+            transform: scale(1.02);
+        }
+
+        .upload-area:hover::before {
+            width: 200px;
+            height: 200px;
+        }
+
+        .upload-btn {
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            padding: 14px 35px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-top: 1rem;
+            transition: all 0.4s ease;
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upload-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .upload-btn:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 30px rgba(102, 126, 234, 0.6);
+        }
+
+        .upload-btn:hover::before {
+            left: 100%;
+        }
+
+        /* Enhanced KPI Cards */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .kpi-card {
+            background: var(--card-bg);
+            padding: 2.5rem;
+            border-radius: 24px;
+            box-shadow: var(--shadow);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            transition: all 0.4s ease;
+            animation: slideInUp 0.8s ease-out;
+        }
+
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: var(--primary-gradient);
+            border-radius: 24px 24px 0 0;
+        }
+
+        .kpi-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, rgba(79, 156, 249, 0.05) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-12px) scale(1.02);
+            box-shadow: var(--shadow-hover), var(--glow);
+            border-color: var(--accent-blue);
+        }
+
+        .kpi-card:hover::after {
+            opacity: 1;
+        }
+
+        .kpi-number {
+            font-size: clamp(2.8rem, 5vw, 4rem);
+            font-weight: 900;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+            animation: countUp 2.5s ease-out;
+            position: relative;
+            z-index: 1;
+        }
+
+        @keyframes countUp {
+            from { 
+                transform: scale(0.3) rotateY(180deg); 
+                opacity: 0; 
+            }
+            to { 
+                transform: scale(1) rotateY(0deg); 
+                opacity: 1; 
+            }
+        }
+
+        .kpi-label {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            font-weight: 600;
+            position: relative;
+            z-index: 1;
+        }
+
+        .kpi-critical .kpi-number {
+            background: linear-gradient(135deg, var(--danger) 0%, #ff6b6b 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        /* Enhanced Analytics Grid */
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(520px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .advanced-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(620px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        /* Enhanced Chart Containers */
+        .chart-container {
+            background: var(--card-bg);
+            padding: 2.5rem;
+            border-radius: 24px;
+            box-shadow: var(--shadow);
+            position: relative;
+            border: 1px solid var(--border);
+            transition: all 0.4s ease;
+            animation: slideInRight 0.8s ease-out;
+            overflow: hidden;
+        }
+
+        .chart-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(79, 156, 249, 0.03) 0%, rgba(139, 92, 246, 0.03) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .chart-container:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--shadow-hover), 0 0 30px rgba(79, 156, 249, 0.2);
+            border-color: var(--accent-purple);
+        }
+
+        .chart-container:hover::before {
+            opacity: 1;
+        }
+
+        .chart-title {
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+            position: relative;
+            z-index: 1;
+        }
+
+        .chart-subtitle {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+            font-style: italic;
+            position: relative;
+            z-index: 1;
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        .scatter-container {
+            min-height: 450px;
+        }
+
+        /* Enhanced Action Section */
+        .action-section {
+            background: var(--card-bg);
+            border-radius: 24px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            border: 1px solid var(--border);
+            animation: slideInUp 0.8s ease-out;
+        }
+
+        .action-header {
+            background: linear-gradient(135deg, var(--danger) 0%, #ff6b6b 100%);
+            color: white;
+            padding: 2.5rem;
+            font-size: 1.5rem;
+            font-weight: 800;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .action-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            animation: headerShine 3s ease-in-out infinite;
+        }
+
+        .action-subtitle {
+            font-size: 1.1rem;
+            opacity: 0.95;
+            margin-top: 0.5rem;
+            font-weight: 500;
+        }
+
+        /* Enhanced Filter Controls */
+        .action-header select,
+        .action-header input {
+            padding: 0.8rem;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.3);
+            background: rgba(255,255,255,0.15);
+            color: white;
+            font-size: 0.95rem;
+            backdrop-filter: blur(15px);
+            transition: all 0.3s ease;
+        }
+
+        .action-header select:focus,
+        .action-header input:focus {
+            outline: none;
+            border-color: rgba(255,255,255,0.6);
+            box-shadow: 0 0 0 3px rgba(255,255,255,0.2);
+            transform: translateY(-2px);
+        }
+
+        .action-header button {
+            padding: 0.8rem 1.5rem;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(15px);
+        }
+
+        .action-header button:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        /* Enhanced Table Styles */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--card-bg);
+        }
+
+        th, td {
+            padding: 1.2rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+            transition: all 0.3s ease;
+        }
+
+        th {
+            background: rgba(79, 156, 249, 0.15);
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: var(--text-primary);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        td {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+        }
+
+        tr:hover {
+            background: var(--card-hover);
+            transform: scale(1.01);
+        }
+
+        .risk-critical { 
+            color: var(--danger);
+            font-weight: bold; 
+            background-color: rgba(239, 68, 68, 0.15);
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .risk-warning { 
+            color: var(--warning);
+            font-weight: bold; 
+            background-color: rgba(245, 158, 11, 0.15);
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+        }
+
+        .progress-score {
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: var(--text-primary);
+        }
+
+        /* Enhanced Action Buttons */
+        .action-btn {
+            padding: 0.4rem 0.8rem;
+            margin: 0.2rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .action-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.3s ease;
+        }
+
+        .action-btn:hover::before {
+            left: 100%;
+        }
+
+        .email-btn {
+            background: var(--accent-blue);
+            color: white;
+        }
+
+        .email-btn:hover {
+            background: #3b82f6;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(59, 130, 246, 0.5);
+        }
+
+        .sms-btn {
+            background: var(--success);
+            color: white;
+        }
+
+        .sms-btn:hover {
+            background: #059669;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(16, 185, 129, 0.5);
+        }
+
+        .call-btn {
+            background: var(--danger);
+            color: white;
+        }
+
+        .call-btn:hover {
+            background: #dc2626;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(239, 68, 68, 0.5);
+        }
+
+        .training-btn {
+            background: var(--warning);
+            color: var(--dark-bg);
+        }
+
+        .training-btn:hover {
+            background: #d97706;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(245, 158, 11, 0.5);
+        }
+
+        .visit-btn {
+            background: var(--accent-purple);
+            color: white;
+        }
+
+        .visit-btn:hover {
+            background: #7c3aed;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(139, 92, 246, 0.5);
+        }
+
+        /* Enhanced Loading and Status */
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-secondary);
+            font-size: 1.2rem;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .error {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--danger);
+            padding: 1.2rem;
+            border-radius: 12px;
+            margin: 1rem 0;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            animation: shake 0.5s ease-in-out;
+        }
+
+        .success {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--success);
+            padding: 1.2rem;
+            border-radius: 12px;
+            margin: 1rem 0;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            animation: slideInUp 0.5s ease-out;
+        }
+
+        .warning {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--warning);
+            padding: 1.2rem;
+            border-radius: 12px;
+            margin: 1rem 0;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        /* Enhanced Animations */
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-60px) rotateY(-15deg);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0) rotateY(0deg);
+            }
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(60px) rotateY(15deg);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0) rotateY(0deg);
+            }
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(60px) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        /* Enhanced Chart Canvas Sizing */
+        .chart-container canvas {
+            max-height: 420px;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .chart-container:hover canvas {
+            transform: scale(1.02);
+        }
+
+        .scatter-container canvas {
+            max-height: 520px;
+            border-radius: 12px;
+        }
+
+        /* Enhanced Toast Animations */
+        @keyframes slideIn {
+            from { 
+                transform: translateX(100%) scale(0.8); 
+                opacity: 0; 
+            }
+            to { 
+                transform: translateX(0) scale(1); 
+                opacity: 1; 
+            }
+        }
+
+        @keyframes slideOut {
+            from { 
+                transform: translateX(0) scale(1); 
+                opacity: 1; 
+            }
+            to { 
+                transform: translateX(100%) scale(0.8); 
+                opacity: 0; 
+            }
+        }
+
+        /* Enhanced Mobile Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .header {
+                padding: 2.5rem 1rem;
+            }
+
+            .analytics-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+            
+            .advanced-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+            
+            .kpi-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1.5rem;
+            }
+
+            .chart-container {
+                padding: 1.5rem;
+            }
+
+            .upload-section {
+                padding: 1.5rem;
+            }
+
+            .upload-area {
+                padding: 1.5rem;
+            }
+
+            .action-header {
+                padding: 1.5rem;
+                font-size: 1.2rem;
+            }
+
+            .action-header > div {
+                flex-direction: column;
+                gap: 0.8rem;
+                align-items: stretch;
+            }
+
+            .action-header select,
+            .action-header input,
+            .action-header button {
+                width: 100%;
+                margin: 0.3rem 0;
+            }
+
+            table {
+                font-size: 0.85rem;
+            }
+
+            th, td {
+                padding: 0.8rem;
+            }
+
+            .action-btn {
+                padding: 0.3rem 0.6rem;
+                font-size: 0.75rem;
+            }
+
+            .kpi-number {
+                font-size: 2.5rem;
+            }
+
+            .chart-container canvas {
+                max-height: 320px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .kpi-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .header p {
+                font-size: 1rem;
+            }
+
+            .analytics-grid {
+                gap: 1rem;
+            }
+
+            .chart-container {
+                padding: 1rem;
+            }
+
+            .chart-title {
+                font-size: 1.2rem;
+            }
+
+            .chart-subtitle {
+                font-size: 0.85rem;
+            }
+
+            table {
+                display: block;
+                overflow-x: auto;
+                white-space: nowrap;
+            }
+
+            .action-btn {
+                display: block;
+                width: 100%;
+                margin: 0.2rem 0;
+            }
+        }
+
+        /* Enhanced Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--dark-bg);
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-cyan));
+        }
+
+        /* Enhanced Focus States for Accessibility */
+        button:focus,
+        select:focus,
+        input:focus {
+            outline: 3px solid var(--accent-blue);
+            outline-offset: 3px;
+            box-shadow: 0 0 0 6px rgba(79, 156, 249, 0.2);
+        }
+
+        /* Enhanced Print Styles */
+        @media print {
+            body {
+                background: white;
+                color: black;
+            }
+            
+            .header {
+                background: none;
+                color: black;
+            }
+            
+            .chart-container,
+            .kpi-card,
+            .upload-section,
+            .action-section {
+                background: white;
+                border: 1px solid #ccc;
+                box-shadow: none;
+            }
+            
+            .action-btn {
+                display: none;
+            }
+        }
+    </style>
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>NGO Beneficiary Progress Dashboard</h1>
+        <p>Data-Driven Insights for Objective Program Assessment & Risk Detection</p>
+    </div>
+
+    <div class="container">
+        <!-- Upload Section -->
+        <div class="upload-section">
+            <h2>Upload Beneficiary Data</h2>
+            <div class="upload-area">
+                <p>📊 Drop your CSV or Excel file here</p>
+                <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" style="display: none;">
+                <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
+                    Choose File
+                </button>
+                <p style="margin-top: 1rem; font-size: 0.9rem; color: #666;">
+                    Required columns: attendance, skill_before, skill_after, assessment<br>
+                    Optional: beneficiary_id (for longitudinal tracking), name, program
+                </p>
+            </div>
+            <div id="uploadStatus"></div>
+            
+            <!-- Data Quality Alerts -->
+            <div id="qualityAlerts" style="margin-top: 1rem;"></div>
+        </div>
+
+        <!-- KPI Cards - Top Row -->
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-number" id="avgProgress">-</div>
+                <div class="kpi-label">Average Progress Score</div>
+            </div>
+            <div class="kpi-card kpi-critical">
+                <div class="kpi-number" id="criticalPercent">-</div>
+                <div class="kpi-label">% Critical Risk</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-number" id="totalBeneficiaries">-</div>
+                <div class="kpi-label">Total Beneficiaries</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-number" id="programCount">-</div>
+                <div class="kpi-label">Active Programs</div>
+            </div>
+        </div>
+
+        <!-- Main Analytics Grid -->
+        <div class="analytics-grid">
+            <!-- Progress Distribution -->
+            <div class="chart-container">
+                <div class="chart-title">Progress Score Distribution</div>
+                <div class="chart-subtitle">How many beneficiaries are actually improving?</div>
+                <canvas id="progressDistChart"></canvas>
+            </div>
+
+            <!-- Risk Breakdown -->
+            <div class="chart-container">
+                <div class="chart-title">Risk Category Breakdown</div>
+                <div class="chart-subtitle">How many need urgent attention?</div>
+                <canvas id="riskChart"></canvas>
+            </div>
+
+            <!-- Program Performance -->
+            <div class="chart-container full-width">
+                <div class="chart-title">Program-wise Average Progress</div>
+                <div class="chart-subtitle">Which NGO program actually works best?</div>
+                <canvas id="programChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Advanced Analytics -->
+        <div class="advanced-grid">
+            <!-- Program Effectiveness -->
+            <div class="chart-container">
+                <div class="chart-title">Program Effectiveness Analysis</div>
+                <div class="chart-subtitle">Which programs should be scaled, redesigned, or discontinued?</div>
+                <canvas id="effectivenessChart"></canvas>
+            </div>
+
+            <!-- Data Quality Monitor -->
+            <div class="chart-container">
+                <div class="chart-title">Data Quality & Alerts</div>
+                <div class="chart-subtitle">Trust and reliability assessment</div>
+                <div id="qualityMonitor">
+                    <div class="loading">Upload data to see quality assessment</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Decision Intelligence Section -->
+        <div class="analytics-grid">
+            <!-- Indicator Contribution -->
+            <div class="chart-container">
+                <div class="chart-title">Score Explainability Breakdown</div>
+                <div class="chart-subtitle">WHY is the score high or low? (Transparency & Trust)</div>
+                <canvas id="contributionChart"></canvas>
+            </div>
+
+            <!-- Attendance vs Progress Scatter -->
+            <div class="chart-container scatter-container">
+                <div class="chart-title">Attendance vs Progress Analysis</div>
+                <div class="chart-subtitle">Does attendance actually lead to outcomes?</div>
+                <canvas id="scatterChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Action Priority Table -->
+        <div class="action-section">
+            <div class="action-header">
+                🚨 Top 10 At-Risk Beneficiaries - Immediate Action Required
+                <div class="action-subtitle">Who should we act on FIRST?</div>
+                
+                <!-- Filter Controls -->
+                <div style="margin-top: 1rem; display: flex; gap: 1rem; flex-wrap: wrap; align-items: center;">
+                    <select id="riskFilter" onchange="filterAtRiskTable()" style="padding: 0.5rem; border-radius: 4px; border: 1px solid #ccc; background: white;">
+                        <option value="all">All Risk Levels</option>
+                        <option value="Critical Risk">Critical Risk Only</option>
+                        <option value="Warning">Warning Only</option>
+                    </select>
+                    
+                    <select id="programFilter" onchange="filterAtRiskTable()" style="padding: 0.5rem; border-radius: 4px; border: 1px solid #ccc; background: white;">
+                        <option value="all">All Programs</option>
+                        <option value="Digital Literacy">Digital Literacy</option>
+                        <option value="Health Education">Health Education</option>
+                        <option value="Vocational Training">Vocational Training</option>
+                    </select>
+                    
+                    <select id="sortFilter" onchange="filterAtRiskTable()" style="padding: 0.5rem; border-radius: 4px; border: 1px solid #ccc; background: white;">
+                        <option value="progress_asc">Lowest Progress First</option>
+                        <option value="progress_desc">Highest Progress First</option>
+                        <option value="attendance_asc">Lowest Attendance First</option>
+                        <option value="name_asc">Name A-Z</option>
+                    </select>
+                    
+                    <input type="number" id="limitFilter" placeholder="Show top..." min="5" max="50" value="10" onchange="filterAtRiskTable()" style="padding: 0.5rem; border-radius: 4px; border: 1px solid #ccc; width: 120px;">
+                    
+                    <button onclick="exportAtRiskData()" style="padding: 0.5rem 1rem; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                        📋 Export List
+                    </button>
+                </div>
+            </div>
+            <div id="actionTable">
+                <div class="loading">No data available. Please upload a file to see results.</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let charts = {};
+
+        // File upload handling
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                uploadFile(file);
+            }
+        });
+
+        async function uploadFile(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const statusDiv = document.getElementById('uploadStatus');
+            const qualityDiv = document.getElementById('qualityAlerts');
+            statusDiv.innerHTML = '<div class="loading">Processing file with advanced analytics...</div>';
+
+            try {
+                const response = await fetch('http://127.0.0.1:8000/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    // Enhanced success message with insights
+                    let successHTML = `<div class="success">
+                        ✅ Successfully processed ${result.records_processed} records from ${result.filename}<br>
+                        📊 Average Progress: ${result.insights.avg_progress}% | 
+                        🚨 Critical Risk: ${result.insights.critical_risk_count} beneficiaries | 
+                        📈 Programs Analyzed: ${result.insights.programs_analyzed}
+                    </div>`;
+                    
+                    statusDiv.innerHTML = successHTML;
+                    
+                    // Show data quality assessment
+                    if (result.data_quality) {
+                        let qualityClass = result.data_quality.score >= 80 ? 'success' : 
+                                         result.data_quality.score >= 60 ? 'warning' : 'error';
+                        
+                        let qualityHTML = `<div class="${qualityClass}">
+                            🔍 Data Quality Score: ${result.data_quality.score}%`;
+                        
+                        if (result.data_quality.flags.length > 0) {
+                            qualityHTML += `<br>⚠️ Issues: ${result.data_quality.flags.join(', ')}`;
+                        }
+                        
+                        qualityHTML += `</div>`;
+                        qualityDiv.innerHTML = qualityHTML;
+                    }
+                    
+                    loadAllAnalytics();
+                } else {
+                    statusDiv.innerHTML = `<div class="error">❌ Error: ${result.error}</div>`;
+                }
+            } catch (error) {
+                statusDiv.innerHTML = `<div class="error">❌ Upload failed: ${error.message}</div>`;
+            }
+        }
+
+        async function loadAllAnalytics() {
+            try {
+                // Load all analytics in parallel
+                await Promise.all([
+                    loadKPIs(),
+                    loadProgressDistribution(),
+                    loadRiskBreakdown(),
+                    loadProgramPerformance(),
+                    loadProgramEffectiveness(),
+                    loadDataQualityMonitor(),
+                    loadIndicatorContribution(),
+                    loadAttendanceVsProgress(),
+                    loadActionTable()
+                ]);
+            } catch (error) {
+                console.error('Error loading analytics:', error);
+            }
+        }
+
+        async function loadKPIs() {
+            const response = await fetch('http://127.0.0.1:8000/api/dashboard');
+            const stats = await response.json();
+
+            document.getElementById('totalBeneficiaries').textContent = stats.total_beneficiaries || 0;
+            document.getElementById('avgProgress').textContent = stats.average_progress || 0;
+            document.getElementById('programCount').textContent = stats.program_performance.length;
+
+            // Calculate critical percentage
+            const criticalCount = stats.risk_distribution
+                .filter(r => r.risk_level === 'Critical Risk')
+                .reduce((sum, r) => sum + r.count, 0);
+            const criticalPercent = stats.total_beneficiaries > 0 
+                ? Math.round((criticalCount / stats.total_beneficiaries) * 100) 
+                : 0;
+            document.getElementById('criticalPercent').textContent = criticalPercent + '%';
+        }
+
+        async function loadProgressDistribution() {
+            const response = await fetch('http://127.0.0.1:8000/api/analytics/progress-distribution');
+            const data = await response.json();
+
+            const ctx = document.getElementById('progressDistChart').getContext('2d');
+            
+            if (charts.progressDist) charts.progressDist.destroy();
+            
+            charts.progressDist = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.ranges,
+                    datasets: [{
+                        label: 'Number of Beneficiaries',
+                        data: data.counts,
+                        backgroundColor: [
+                            '#dc3545', '#fd7e14', '#ffc107', '#28a745', '#20c997'
+                        ],
+                        borderColor: '#fff',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Number of Beneficiaries'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Progress Score Range'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        async function loadRiskBreakdown() {
+            const response = await fetch('http://127.0.0.1:8000/api/dashboard');
+            const stats = await response.json();
+
+            const ctx = document.getElementById('riskChart').getContext('2d');
+            
+            if (charts.risk) charts.risk.destroy();
+            
+            charts.risk = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: stats.risk_distribution.map(d => d.risk_level),
+                    datasets: [{
+                        data: stats.risk_distribution.map(d => d.count),
+                        backgroundColor: ['#28a745', '#fd7e14', '#dc3545'],
+                        borderWidth: 3,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                font: { size: 12 }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        async function loadProgramPerformance() {
+            const response = await fetch('http://127.0.0.1:8000/api/dashboard');
+            const stats = await response.json();
+
+            const ctx = document.getElementById('programChart').getContext('2d');
+            
+            if (charts.program) charts.program.destroy();
+            
+            charts.program = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: stats.program_performance.map(d => d.program),
+                    datasets: [{
+                        label: 'Average Progress Score',
+                        data: stats.program_performance.map(d => d.avg_score),
+                        backgroundColor: '#667eea',
+                        borderColor: '#764ba2',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            title: {
+                                display: true,
+                                text: 'Average Progress Score'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        async function loadIndicatorContribution() {
+            const response = await fetch('http://127.0.0.1:8000/api/analytics/indicator-contribution');
+            const data = await response.json();
+
+            const ctx = document.getElementById('contributionChart').getContext('2d');
+            
+            if (charts.contribution) charts.contribution.destroy();
+            
+            charts.contribution = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.map(d => d.program),
+                    datasets: [
+                        {
+                            label: 'Attendance (40%)',
+                            data: data.map(d => d.attendance_contribution),
+                            backgroundColor: '#667eea'
+                        },
+                        {
+                            label: 'Skill Improvement (30%)',
+                            data: data.map(d => d.skill_contribution),
+                            backgroundColor: '#764ba2'
+                        },
+                        {
+                            label: 'Assessment (30%)',
+                            data: data.map(d => d.assessment_contribution),
+                            backgroundColor: '#20c997'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: { stacked: true },
+                        y: { 
+                            stacked: true,
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Contribution to Progress Score'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        async function loadProgramEffectiveness() {
+            const response = await fetch('http://127.0.0.1:8000/api/analytics/program-effectiveness');
+            const data = await response.json();
+
+            const ctx = document.getElementById('effectivenessChart').getContext('2d');
+            
+            if (charts.effectiveness) charts.effectiveness.destroy();
+            
+            charts.effectiveness = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'Program Effectiveness',
+                        data: data.map(d => ({
+                            x: d.avg_progress,
+                            y: d.effectiveness_score,
+                            program: d.program_name,
+                            beneficiaries: d.total_beneficiaries
+                        })),
+                        backgroundColor: data.map(d => 
+                            d.effectiveness_score >= 70 ? '#28a745' :
+                            d.effectiveness_score >= 50 ? '#ffc107' : '#dc3545'
+                        ),
+                        borderColor: '#fff',
+                        borderWidth: 2,
+                        pointRadius: data.map(d => Math.max(8, Math.min(20, d.total_beneficiaries / 2)))
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Average Progress Score'
+                            },
+                            min: 0,
+                            max: 100
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Effectiveness Score'
+                            },
+                            min: 0,
+                            max: 100
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const point = context.raw;
+                                    return [
+                                        `Program: ${point.program}`,
+                                        `Progress: ${point.x}%`,
+                                        `Effectiveness: ${point.y}%`,
+                                        `Beneficiaries: ${point.beneficiaries}`
+                                    ];
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        async function loadDataQualityMonitor() {
+            const response = await fetch('http://127.0.0.1:8000/api/analytics/data-quality');
+            const data = await response.json();
+
+            const monitorDiv = document.getElementById('qualityMonitor');
+            
+            if (data.quality_trends.length === 0) {
+                monitorDiv.innerHTML = '<div class="loading">No quality data available yet</div>';
+                return;
+            }
+
+            let html = '<div style="padding: 1rem;">';
+            
+            // Quality trends
+            if (data.quality_trends.length > 0) {
+                const latestQuality = data.quality_trends[0];
+                const qualityScore = latestQuality.avg_quality_score || 100;
+                
+                html += `<div style="margin-bottom: 1rem;">
+                    <h4>Latest Upload Quality: ${qualityScore.toFixed(1)}%</h4>
+                    <div style="background: #f0f0f0; border-radius: 10px; height: 20px; overflow: hidden;">
+                        <div style="background: ${qualityScore >= 80 ? '#28a745' : qualityScore >= 60 ? '#ffc107' : '#dc3545'}; 
+                                    height: 100%; width: ${qualityScore}%; transition: width 0.3s;"></div>
+                    </div>
+                </div>`;
+            }
+            
+            // Recent alerts count
+            if (data.recent_alerts_count > 0) {
+                html += `<h4>Recent Quality Alerts: ${data.recent_alerts_count}</h4>`;
+                html += '<p style="margin: 0.5rem 0; font-size: 0.9rem; color: #666;">Issues detected in recent uploads</p>';
+            } else {
+                html += '<h4>✅ No Quality Issues</h4>';
+                html += '<p style="margin: 0.5rem 0; font-size: 0.9rem; color: #28a745;">All recent uploads have clean data</p>';
+            }
+            
+            html += '</div>';
+            monitorDiv.innerHTML = html;
+        }
+
+        async function loadAttendanceVsProgress() {
+            const response = await fetch('http://127.0.0.1:8000/api/analytics/attendance-vs-progress');
+            const data = await response.json();
+
+            const ctx = document.getElementById('scatterChart').getContext('2d');
+            
+            if (charts.scatter) charts.scatter.destroy();
+            
+            // Group by program for different colors
+            const programs = [...new Set(data.map(d => d.program))];
+            const colors = ['#667eea', '#764ba2', '#20c997', '#fd7e14', '#dc3545'];
+            
+            const datasets = programs.map((program, index) => ({
+                label: program,
+                data: data.filter(d => d.program === program).map(d => ({
+                    x: d.attendance,
+                    y: d.progress_score
+                })),
+                backgroundColor: colors[index % colors.length],
+                borderColor: colors[index % colors.length],
+                pointRadius: 6,
+                pointHoverRadius: 8
+            }));
+
+            charts.scatter = new Chart(ctx, {
+                type: 'scatter',
+                data: { datasets },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Attendance %'
+                            },
+                            min: 0,
+                            max: 100
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Progress Score'
+                            },
+                            min: 0,
+                            max: 100
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top'
+                        }
+                    }
+                }
+            });
+        }
+
+        // Global variable to store all at-risk data for filtering
+        let allAtRiskData = [];
+
+        async function loadActionTable() {
+            const response = await fetch('http://127.0.0.1:8000/api/analytics/top-at-risk');
+            const data = await response.json();
+
+            // Store all data globally for filtering
+            allAtRiskData = data;
+            
+            // Apply current filters
+            filterAtRiskTable();
+        }
+
+        function filterAtRiskTable() {
+            const riskFilter = document.getElementById('riskFilter').value;
+            const programFilter = document.getElementById('programFilter').value;
+            const sortFilter = document.getElementById('sortFilter').value;
+            const limitFilter = parseInt(document.getElementById('limitFilter').value) || 10;
+
+            let filteredData = [...allAtRiskData];
+
+            // Apply risk level filter
+            if (riskFilter !== 'all') {
+                filteredData = filteredData.filter(row => row.risk_level === riskFilter);
+            }
+
+            // Apply program filter
+            if (programFilter !== 'all') {
+                filteredData = filteredData.filter(row => row.program === programFilter);
+            }
+
+            // Apply sorting
+            switch (sortFilter) {
+                case 'progress_asc':
+                    filteredData.sort((a, b) => a.progress_score - b.progress_score);
+                    break;
+                case 'progress_desc':
+                    filteredData.sort((a, b) => b.progress_score - a.progress_score);
+                    break;
+                case 'attendance_asc':
+                    filteredData.sort((a, b) => a.attendance - b.attendance);
+                    break;
+                case 'name_asc':
+                    filteredData.sort((a, b) => a.name.localeCompare(b.name));
+                    break;
+            }
+
+            // Apply limit
+            filteredData = filteredData.slice(0, limitFilter);
+
+            // Render the filtered table
+            renderAtRiskTable(filteredData);
+        }
+
+        function renderAtRiskTable(data) {
+            const tableDiv = document.getElementById('actionTable');
+            
+            if (data.length === 0) {
+                tableDiv.innerHTML = '<div class="loading">No beneficiaries match the current filters. 🎉</div>';
+                return;
+            }
+
+            let tableHTML = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Priority</th>
+                            <th>Name</th>
+                            <th>Program</th>
+                            <th>Progress Score</th>
+                            <th>Attendance</th>
+                            <th>Risk Level</th>
+                            <th>Primary Issues</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            data.forEach((row, index) => {
+                const riskClass = row.risk_level === 'Critical Risk' ? 'risk-critical' : 'risk-warning';
+                const priority = index + 1;
+                const urgencyIcon = priority <= 3 ? '🔥' : priority <= 5 ? '⚠️' : '📋';
+                
+                // Generate specific action recommendations with communication options
+                let actionRecommendation = '';
+                let communicationButtons = '';
+                
+                if (row.attendance < 60) {
+                    actionRecommendation = '📞 Contact immediately';
+                    communicationButtons = `
+                        <div style="margin-top: 0.5rem;">
+                            <button onclick="sendEmail('${row.name}', 'attendance')" class="action-btn email-btn">📧 Email</button>
+                            <button onclick="sendSMS('${row.name}', 'attendance')" class="action-btn sms-btn">📱 SMS</button>
+                            <button onclick="scheduleCall('${row.name}')" class="action-btn call-btn">📞 Call</button>
+                        </div>
+                    `;
+                } else if (row.skill_improvement_score <= 0) {
+                    actionRecommendation = '🎓 Review training';
+                    communicationButtons = `
+                        <div style="margin-top: 0.5rem;">
+                            <button onclick="sendEmail('${row.name}', 'training')" class="action-btn email-btn">📧 Email</button>
+                            <button onclick="scheduleTraining('${row.name}')" class="action-btn training-btn">🎓 Schedule</button>
+                        </div>
+                    `;
+                } else if (row.progress_score < 40) {
+                    actionRecommendation = '🆘 Urgent intervention';
+                    communicationButtons = `
+                        <div style="margin-top: 0.5rem;">
+                            <button onclick="sendEmail('${row.name}', 'urgent')" class="action-btn email-btn">📧 Email</button>
+                            <button onclick="sendSMS('${row.name}', 'urgent')" class="action-btn sms-btn">📱 SMS</button>
+                            <button onclick="scheduleCall('${row.name}')" class="action-btn call-btn">📞 Call</button>
+                            <button onclick="scheduleVisit('${row.name}')" class="action-btn visit-btn">🏠 Visit</button>
+                        </div>
+                    `;
+                } else {
+                    actionRecommendation = '📋 Monitor closely';
+                    communicationButtons = `
+                        <div style="margin-top: 0.5rem;">
+                            <button onclick="sendEmail('${row.name}', 'monitor')" class="action-btn email-btn">📧 Email</button>
+                        </div>
+                    `;
+                }
+                
+                tableHTML += `
+                    <tr>
+                        <td><strong>${urgencyIcon} #${priority}</strong></td>
+                        <td><strong>${row.name}</strong></td>
+                        <td>${row.program}</td>
+                        <td class="progress-score">${row.progress_score}%</td>
+                        <td>${row.attendance}%</td>
+                        <td><span class="${riskClass}">${row.risk_level}</span></td>
+                        <td style="font-size: 0.85rem;">${row.risk_reasons}</td>
+                        <td style="font-size: 0.85rem;">
+                            <div style="font-weight: bold; color: #667eea; margin-bottom: 0.25rem;">${actionRecommendation}</div>
+                            ${communicationButtons}
+                        </td>
+                    </tr>
+                `;
+            });
+
+            tableHTML += '</tbody></table>';
+            
+            // Add summary info
+            const criticalCount = data.filter(r => r.risk_level === 'Critical Risk').length;
+            const warningCount = data.filter(r => r.risk_level === 'Warning').length;
+            
+            tableHTML += `
+                <div style="padding: 1rem; background: var(--card-hover); border-top: 1px solid var(--border); font-size: 0.9rem; color: var(--text-primary);">
+                    <strong>Filtered Results:</strong> ${data.length} beneficiaries | 
+                    🔴 ${criticalCount} Critical | 🟡 ${warningCount} Warning
+                </div>
+            `;
+            
+            tableDiv.innerHTML = tableHTML;
+        }
+
+        function exportAtRiskData() {
+            const riskFilter = document.getElementById('riskFilter').value;
+            const programFilter = document.getElementById('programFilter').value;
+            
+            // Get current filtered data
+            let exportData = [...allAtRiskData];
+            
+            if (riskFilter !== 'all') {
+                exportData = exportData.filter(row => row.risk_level === riskFilter);
+            }
+            if (programFilter !== 'all') {
+                exportData = exportData.filter(row => row.program === programFilter);
+            }
+            
+            // Create CSV content
+            const headers = ['Name', 'Program', 'Progress Score', 'Attendance', 'Risk Level', 'Risk Reasons', 'Skill Improvement'];
+            const csvContent = [
+                headers.join(','),
+                ...exportData.map(row => [
+                    `"${row.name}"`,
+                    `"${row.program}"`,
+                    row.progress_score,
+                    row.attendance,
+                    `"${row.risk_level}"`,
+                    `"${row.risk_reasons}"`,
+                    row.skill_improvement_score
+                ].join(','))
+            ].join('\n');
+            
+            // Download CSV
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `at-risk-beneficiaries-${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            
+            // Show success message
+            alert('📋 At-risk beneficiaries list exported successfully!');
+        }
+
+        // Communication Action Functions
+        function sendEmail(beneficiaryName, actionType) {
+            // Find the beneficiary data to get real email
+            const beneficiary = allAtRiskData.find(b => b.name === beneficiaryName);
+            const email = beneficiary ? beneficiary.email : `${beneficiaryName.toLowerCase().replace(' ', '.')}@example.com`;
+            
+            const templates = {
+                attendance: {
+                    subject: `Important: We Miss You in Our Program - ${beneficiaryName}`,
+                    body: `Dear ${beneficiaryName},
+
+We've noticed you've missed several recent sessions in our program. We want to make sure you're doing well and see how we can support you.
+
+Your progress is important to us, and we're here to help overcome any challenges you might be facing.
+
+Could you please:
+- Let us know if you're facing any barriers to attendance
+- Schedule a time to discuss your goals and how we can help
+- Reach out if you need any support or have questions
+
+We believe in your potential and want to see you succeed!
+
+Best regards,
+[NGO Program Team]
+
+P.S. Reply to this email or call us at [phone number] - we're here to help!`
+                },
+                training: {
+                    subject: `Let's Enhance Your Learning Experience - ${beneficiaryName}`,
+                    body: `Dear ${beneficiaryName},
+
+We've been reviewing your progress and want to ensure our training is meeting your needs effectively.
+
+We'd like to schedule a one-on-one session to:
+- Understand your learning preferences better
+- Adjust our training approach to suit your style
+- Provide additional resources that might help
+- Set personalized goals for your development
+
+Your success is our priority, and we're committed to finding the best way to support your learning journey.
+
+Please reply with your availability for a brief meeting this week.
+
+Best regards,
+[NGO Training Team]`
+                },
+                urgent: {
+                    subject: `Urgent: Let's Work Together to Get You Back on Track - ${beneficiaryName}`,
+                    body: `Dear ${beneficiaryName},
+
+We're reaching out because we care about your success and want to provide immediate support.
+
+Our records show you may be facing some challenges, and we want you to know that we're here to help in any way we can.
+
+Immediate next steps:
+- We'll call you within 24 hours to discuss your situation
+- We can arrange flexible scheduling if needed
+- Additional support resources are available
+- One-on-one mentoring can be arranged
+
+Please don't hesitate to reach out - no challenge is too big for us to work through together.
+
+Urgent contact: [phone number] or reply to this email immediately.
+
+We believe in you!
+
+[NGO Support Team]`
+                },
+                monitor: {
+                    subject: `Keep Up the Great Work! - ${beneficiaryName}`,
+                    body: `Dear ${beneficiaryName},
+
+We wanted to reach out and acknowledge your participation in our program. You're making progress, and we want to ensure you continue on this positive path.
+
+To support your continued success:
+- Keep attending sessions regularly
+- Don't hesitate to ask questions during training
+- Let us know if you need any additional support
+- We're here if any challenges arise
+
+Keep up the excellent work!
+
+Best regards,
+[NGO Program Team]`
+                }
+            };
+
+            const template = templates[actionType];
+            const mailtoLink = `mailto:${email}?subject=${encodeURIComponent(template.subject)}&body=${encodeURIComponent(template.body)}`;
+            
+            // Open email client
+            window.open(mailtoLink);
+            
+            // Log action (in real system, this would go to database)
+            console.log(`Email sent to ${beneficiaryName} at ${email} for ${actionType}`);
+            
+            // Show confirmation
+            showActionConfirmation(`📧 Email opened for ${beneficiaryName} (${email})`, 'email');
+        }
+
+        function sendSMS(beneficiaryName, actionType) {
+            // Find the beneficiary data to get real phone number
+            const beneficiary = allAtRiskData.find(b => b.name === beneficiaryName);
+            const phone = beneficiary ? beneficiary.phone : '+1-555-0000';
+            
+            const smsTemplates = {
+                attendance: `Hi ${beneficiaryName}! We miss you in our program. Is everything okay? Please call us at [phone] or reply if you need support. We're here to help! - [NGO Team]`,
+                urgent: `${beneficiaryName}, we're concerned about your progress and want to help immediately. Please call us at [phone] ASAP or reply to this message. We care about your success! - [NGO Team]`
+            };
+
+            const message = smsTemplates[actionType];
+            
+            // Use real phone number for SMS
+            const smsLink = `sms:${phone}?body=${encodeURIComponent(message)}`;
+            
+            // Show SMS composition (mobile) or copy to clipboard (desktop)
+            if (navigator.userAgent.match(/Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i)) {
+                window.open(smsLink);
+                showActionConfirmation(`📱 SMS opened for ${beneficiaryName} (${phone})`, 'sms');
+            } else {
+                // Copy to clipboard for desktop
+                navigator.clipboard.writeText(`To: ${phone}\nMessage: ${message}`).then(() => {
+                    showActionConfirmation(`📱 SMS copied to clipboard for ${beneficiaryName} (${phone})`, 'sms');
+                });
+            }
+            
+            console.log(`SMS prepared for ${beneficiaryName} at ${phone} for ${actionType}`);
+        }
+
+        function scheduleCall(beneficiaryName) {
+            const callReminder = `Call ${beneficiaryName} - Follow up on program attendance and provide support`;
+            
+            // Create calendar event (simplified)
+            const startDate = new Date();
+            startDate.setDate(startDate.getDate() + 1); // Tomorrow
+            startDate.setHours(10, 0, 0, 0); // 10 AM
+            
+            const endDate = new Date(startDate);
+            endDate.setMinutes(endDate.getMinutes() + 30); // 30-minute call
+            
+            const calendarLink = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(callReminder)}&dates=${startDate.toISOString().replace(/[-:]/g, '').split('.')[0]}Z/${endDate.toISOString().replace(/[-:]/g, '').split('.')[0]}Z&details=${encodeURIComponent(`Follow-up call with ${beneficiaryName} regarding program participation and support needs.`)}`;
+            
+            window.open(calendarLink, '_blank');
+            showActionConfirmation(`📞 Call scheduled for ${beneficiaryName}`, 'call');
+        }
+
+        function scheduleTraining(beneficiaryName) {
+            const trainingEvent = `One-on-One Training Session - ${beneficiaryName}`;
+            
+            const startDate = new Date();
+            startDate.setDate(startDate.getDate() + 3); // 3 days from now
+            startDate.setHours(14, 0, 0, 0); // 2 PM
+            
+            const endDate = new Date(startDate);
+            endDate.setHours(endDate.getHours() + 1); // 1-hour session
+            
+            const calendarLink = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(trainingEvent)}&dates=${startDate.toISOString().replace(/[-:]/g, '').split('.')[0]}Z/${endDate.toISOString().replace(/[-:]/g, '').split('.')[0]}Z&details=${encodeURIComponent(`Personalized training session with ${beneficiaryName} to address skill development needs and learning preferences.`)}`;
+            
+            window.open(calendarLink, '_blank');
+            showActionConfirmation(`🎓 Training session scheduled for ${beneficiaryName}`, 'training');
+        }
+
+        function scheduleVisit(beneficiaryName) {
+            const visitEvent = `Home Visit - ${beneficiaryName}`;
+            
+            const startDate = new Date();
+            startDate.setDate(startDate.getDate() + 2); // 2 days from now
+            startDate.setHours(11, 0, 0, 0); // 11 AM
+            
+            const endDate = new Date(startDate);
+            endDate.setHours(endDate.getHours() + 1); // 1-hour visit
+            
+            const calendarLink = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(visitEvent)}&dates=${startDate.toISOString().replace(/[-:]/g, '').split('.')[0]}Z/${endDate.toISOString().replace(/[-:]/g, '').split('.')[0]}Z&details=${encodeURIComponent(`Home visit to ${beneficiaryName} to understand barriers and provide in-person support.`)}`;
+            
+            window.open(calendarLink, '_blank');
+            showActionConfirmation(`🏠 Home visit scheduled for ${beneficiaryName}`, 'visit');
+        }
+
+        function showActionConfirmation(message, type) {
+            // Create and show confirmation toast
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${type === 'email' ? '#007bff' : type === 'sms' ? '#28a745' : type === 'call' ? '#dc3545' : '#6f42c1'};
+                color: white;
+                padding: 1rem 1.5rem;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                z-index: 10000;
+                font-weight: bold;
+                max-width: 300px;
+                animation: slideIn 0.3s ease-out;
+            `;
+            
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            // Remove toast after 3 seconds
+            setTimeout(() => {
+                toast.style.animation = 'slideOut 0.3s ease-in';
+                setTimeout(() => document.body.removeChild(toast), 300);
+            }, 3000);
+        }
+
+        // Add CSS animations for toast
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes slideOut {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(100%); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Load initial data on page load
+        window.addEventListener('load', loadAllAnalytics);
+    </script>
+</body>
+</html>
